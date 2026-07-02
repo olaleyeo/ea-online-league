@@ -1,0 +1,63 @@
+replicaCount: 2
+
+image:
+  repository: your-registry/ea-league
+  backendTag: "latest"
+  frontendTag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  backendPort: 3001
+  frontendPort: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: app.ealeague.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          backendService: backend
+        - path: /
+          pathType: Prefix
+          backendService: frontend
+  tls:
+    - secretName: ea-league-tls
+      hosts:
+        - app.ealeague.com
+
+resources:
+  backend:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  frontend:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+env:
+  VITE_API_URL: "https://app.ealeague.com/api"
+  NODE_ENV: "production"
+
+# In production, these should be managed by a secret manager like ExternalSecrets
+secrets:
+  DATABASE_URL: ""
+  DIRECT_URL: ""

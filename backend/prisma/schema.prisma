@@ -1,0 +1,96 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  name        String
+  tournaments Tournament[]
+}
+
+model Tournament {
+  id        String       @id @default(uuid())
+  name      String
+  ownerId   String
+  status    String       @default("DRAFT") // DRAFT, LEAGUE, KNOCKOUT, FINISHED
+  owner     User         @relation(fields: [ownerId], references: [id])
+  players   Player[]
+  fixtures  Fixture[]
+  standings Standing[]
+  knockouts KnockoutTie[]
+}
+
+model Player {
+  id           String     @id @default(uuid())
+  tournamentId String
+  name         String
+  rating       Int?       @default(1000)
+  pot          Int?
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+
+  fixturesHome Fixture[] @relation("HomeFixtures")
+  fixturesAway Fixture[] @relation("AwayFixtures")
+
+  standings    Standing[]
+
+  knockoutHome KnockoutTie[] @relation("KnockoutHome")
+  knockoutAway KnockoutTie[] @relation("KnockoutAway")
+}
+
+model Fixture {
+  id           String     @id @default(uuid())
+  tournamentId String
+  stage        String     @default("LEAGUE")
+  homePlayerId String
+  awayPlayerId String
+  matchday     Int?
+  leg          Int        @default(1)
+  homeScore    Int?
+  awayScore    Int?
+  status       String     @default("PENDING") // PENDING, PLAYED
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  homePlayer   Player     @relation("HomeFixtures", fields: [homePlayerId], references: [id])
+  awayPlayer   Player     @relation("AwayFixtures", fields: [awayPlayerId], references: [id])
+}
+
+model Standing {
+  id           String     @id @default(uuid())
+  tournamentId String
+  playerId     String
+  played       Int        @default(0)
+  wins         Int        @default(0)
+  draws        Int        @default(0)
+  losses       Int        @default(0)
+  gf           Int        @default(0)
+  ga           Int        @default(0)
+  gd           Int        @default(0)
+  points       Int        @default(0)
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  player       Player     @relation(fields: [playerId], references: [id])
+
+  @@unique([tournamentId, playerId])
+}
+
+model KnockoutTie {
+  id            String     @id @default(uuid())
+  tournamentId  String
+  stage         String     // PLAYOFF, R16, QF, SF, FINAL
+  homePlayerId  String?
+  awayPlayerId  String?
+  aggregateHome Int?
+  aggregateAway Int?
+  winnerId      String?
+  
+  tournament    Tournament @relation(fields: [tournamentId], references: [id])
+  homePlayer    Player?    @relation("KnockoutHome", fields: [homePlayerId], references: [id])
+  awayPlayer    Player?    @relation("KnockoutAway", fields: [awayPlayerId], references: [id])
+}

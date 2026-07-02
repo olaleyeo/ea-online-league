@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ea-league-config
+data:
+  NODE_ENV: "production"
+  # This configures the frontend container to know where the API is during build/runtime
+  VITE_API_URL: "https://app.ealeague.com/api"
