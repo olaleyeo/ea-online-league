@@ -103,15 +103,15 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
     <div className="space-y-8">
       {champion && <WinnerBanner winnerName={champion.name} />}
 
-      <div className="flex gap-6 overflow-x-auto pb-8">
+      <div className="flex gap-4 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {groupedTies.map((group) => (
-          <div key={group.stage} className="min-w-[300px] flex-shrink-0 bg-slate-900 border border-slate-800 rounded-xl p-6">
-            <h3 className="text-lg font-bold mb-6 text-center text-indigo-400">
+          <div key={group.stage} className="min-w-[220px] flex-shrink-0 bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <h3 className="text-base font-bold mb-4 text-center text-indigo-400">
               {group.stage.replace(/_/g, ' ')}
             </h3>
-            <div className="space-y-6 flex flex-col justify-around h-full">
+            <div className="space-y-4 flex flex-col justify-around h-full">
               {group.matches.map((tie: any) => (
-                <div key={tie.id} className="bg-slate-950 border border-slate-800 rounded-lg p-4 flex flex-col gap-3 shadow-md relative">
+                <div key={tie.id} className="bg-slate-950 border border-slate-800 rounded-lg p-3 flex flex-col gap-2 shadow-md relative text-sm">
                   {/* Home Player */}
                   <div className={`flex justify-between items-center ${tie.winnerId === tie.homePlayerId ? 'text-yellow-400 font-bold' : 'text-slate-300'}`}>
                     <span>{tie.homePlayer?.name || 'TBD'}</span>
