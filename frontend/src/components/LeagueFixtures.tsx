@@ -115,7 +115,7 @@ export default function LeagueFixtures({ tournamentId }: { tournamentId: string 
             <h3 className="font-bold">Matchday {md}</h3>
           </div>
           <div className="divide-y divide-slate-800/50">
-            {matchdays[Number(md)].map(f => (
+            {matchdays[Number(md)].map((f: any) => (
               <div key={f.id} className="p-4 flex items-center justify-between hover:bg-slate-800/20 transition-colors">
                 <div className="flex-1 text-right font-medium">{f.homePlayer.name}</div>
                 <div className="mx-6 flex items-center justify-center gap-2 px-2 py-1 bg-slate-950 rounded-md border border-slate-800 min-w-[100px]">

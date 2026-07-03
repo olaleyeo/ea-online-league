@@ -104,7 +104,7 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
       {champion && <WinnerBanner winnerName={champion.name} />}
 
       <div className="flex gap-6 overflow-x-auto pb-8">
-        {groupedTies.map((group, index) => (
+        {groupedTies.map((group) => (
           <div key={group.stage} className="min-w-[300px] flex-shrink-0 bg-slate-900 border border-slate-800 rounded-xl p-6">
             <h3 className="text-lg font-bold mb-6 text-center text-indigo-400">
               {group.stage.replace(/_/g, ' ')}
