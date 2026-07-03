@@ -12,6 +12,7 @@ export default function CreateTournamentPage() {
   const [numPlayers, setNumPlayers] = useState(24);
   const [playerNamesRaw, setPlayerNamesRaw] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +33,9 @@ export default function CreateTournamentPage() {
       await addPlayers(tournament.id, dummyPlayers);
       setTournament(tournament);
       navigate(`/tournament/${tournament.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      setErrorMsg(error.response?.data?.error || error.message || 'Failed to create tournament. Is the backend running?');
     } finally {
       setLoading(false);
     }
@@ -89,6 +91,12 @@ export default function CreateTournamentPage() {
           />
           <p className="text-xs text-slate-500 mt-2">Leave blank to auto-generate names. If you provide fewer names than the player count, the rest will be auto-generated.</p>
         </div>
+        
+        {errorMsg && (
+          <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm text-center">
+            {errorMsg}
+          </div>
+        )}
         
         <button
           type="submit"
