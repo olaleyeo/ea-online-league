@@ -68,16 +68,22 @@ export default function CreateTournamentPage() {
         
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">Number of Players</label>
-          <select
-            value={numPlayers}
-            onChange={(e) => setNumPlayers(Number(e.target.value))}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors appearance-none"
-          >
-            <option value={8}>8 Players (Quarter-Final start)</option>
-            <option value={16}>16 Players (Round of 16 start)</option>
-            <option value={24}>24 Players (Champions League format)</option>
-            <option value={32}>32 Players (Classic format)</option>
-          </select>
+          <div className="flex items-center gap-4">
+            <input
+              type="number"
+              min={8}
+              max={64}
+              value={numPlayers}
+              onChange={(e) => setNumPlayers(Number(e.target.value))}
+              className="w-32 bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+            <span className="text-slate-400 text-sm">
+              {numPlayers < 16 && "(8 advance to Quarter-Finals)"}
+              {numPlayers >= 16 && numPlayers < 24 && "(16 advance to Round of 16)"}
+              {numPlayers >= 24 && numPlayers < 32 && "(Top 8 bye, Ranks 9-24 play Playoffs)"}
+              {numPlayers >= 32 && "(32 advance to Round of 32)"}
+            </span>
+          </div>
         </div>
 
         <div>

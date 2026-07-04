@@ -15,20 +15,24 @@ export async function generatePlayoffs(tournamentId: string) {
   let tiesCount = 0;
   let stageName = 'PLAYOFF';
 
-  if (numPlayers === 8) {
-    playoffTeams = standings;
+  if (numPlayers >= 8 && numPlayers < 16) {
+    playoffTeams = standings.slice(0, 8);
     tiesCount = 4;
     stageName = 'QUARTER_FINAL';
-  } else if (numPlayers === 16) {
-    playoffTeams = standings;
+  } else if (numPlayers >= 16 && numPlayers < 24) {
+    playoffTeams = standings.slice(0, 16);
     tiesCount = 8;
     stageName = 'ROUND_OF_16';
-  } else if (numPlayers >= 24) {
+  } else if (numPlayers >= 24 && numPlayers < 32) {
     playoffTeams = standings.slice(8, 24);
     tiesCount = 8;
     stageName = 'PLAYOFF';
+  } else if (numPlayers >= 32) {
+    playoffTeams = standings.slice(0, 32);
+    tiesCount = 16;
+    stageName = 'ROUND_OF_32';
   } else {
-    throw new Error('Unsupported number of teams');
+    throw new Error('Not enough teams for a knockout bracket (minimum 8)');
   }
 
   const ties = [];
@@ -58,7 +62,7 @@ export async function progressKnockoutStage(tournamentId: string) {
     orderBy: { id: 'asc' } 
   });
 
-  const stages = ['PLAYOFF', 'ROUND_OF_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'FINAL'];
+  const stages = ['PLAYOFF', 'ROUND_OF_32', 'ROUND_OF_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'FINAL'];
   
   let currentStage = 'PLAYOFF';
   let currentTies: any[] = [];

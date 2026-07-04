@@ -83,7 +83,7 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
   }
 
   // Group ties by stage
-  const stagesOrder = ['PLAYOFF', 'ROUND_OF_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'FINAL'];
+  const stagesOrder = ['PLAYOFF', 'ROUND_OF_32', 'ROUND_OF_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'FINAL'];
   const groupedTies = stagesOrder.map(stage => ({
     stage,
     matches: ties.filter(t => t.stage === stage)
