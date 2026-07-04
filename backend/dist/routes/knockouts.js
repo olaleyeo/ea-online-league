@@ -6,8 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const prisma_1 = require("../prisma");
 const bracketGenerator_1 = require("../services/bracketGenerator");
+const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
-router.post('/tournaments/:id/knockout/generate', async (req, res) => {
+router.post('/tournaments/:id/knockout/generate', auth_1.requireAdminPin, async (req, res) => {
     try {
         const ties = await (0, bracketGenerator_1.generatePlayoffs)(req.params.id);
         res.json({ message: 'Playoffs generated', ties });
@@ -16,7 +17,7 @@ router.post('/tournaments/:id/knockout/generate', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-router.post('/tournaments/:id/knockout/progress', async (req, res) => {
+router.post('/tournaments/:id/knockout/progress', auth_1.requireAdminPin, async (req, res) => {
     try {
         const result = await (0, bracketGenerator_1.progressKnockoutStage)(req.params.id);
         res.json(result);
@@ -37,7 +38,7 @@ router.get('/tournaments/:id/knockout', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch ties' });
     }
 });
-router.patch('/knockout/:id', async (req, res) => {
+router.patch('/knockout/:id', auth_1.requireAdminPin, async (req, res) => {
     try {
         const { aggregateHome, aggregateAway } = req.body;
         let winnerId = req.body.winnerId;
