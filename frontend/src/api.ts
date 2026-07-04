@@ -29,8 +29,9 @@ export const createTournament = async (name: string, ownerId: string, adminPin?:
   return data;
 };
 
-export const addPlayers = async (tournamentId: string, players: any[]) => {
-  const { data } = await api.post(`/tournaments/${tournamentId}/players`, { players });
+export const addPlayers = async (tournamentId: string, players: any[], adminPin?: string) => {
+  const headers = adminPin ? { 'X-Admin-Pin': adminPin } : {};
+  const { data } = await api.post(`/tournaments/${tournamentId}/players`, { players }, { headers });
   return data;
 };
 

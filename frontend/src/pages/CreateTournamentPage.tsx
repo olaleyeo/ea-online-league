@@ -34,7 +34,7 @@ export default function CreateTournamentPage() {
         pot: Math.floor(i / (numPlayers / 4)) + 1 
       }));
       
-      await addPlayers(tournament.id, dummyPlayers);
+      await addPlayers(tournament.id, dummyPlayers, adminPin);
       setTournament(tournament);
       navigate(`/tournament/${tournament.id}`);
     } catch (error: any) {
