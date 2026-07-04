@@ -9,9 +9,17 @@ api.interceptors.request.use((config) => {
   // Use getState() to access zustand state outside of React
   const state = useTournamentStore.getState();
   const currentTournamentId = state.currentTournament?.id;
+  // Try to find tournament ID in URL (e.g., /tournaments/123-abc/players)
+  const match = config.url?.match(/\/tournaments\/([a-zA-Z0-9-]+)\//);
+  const urlTournamentId = match ? match[1] : null;
   
-  if (currentTournamentId && state.unlockedPins[currentTournamentId]) {
-    config.headers['X-Admin-Pin'] = state.unlockedPins[currentTournamentId];
+  const targetId = urlTournamentId || currentTournamentId;
+  
+  if (targetId && state.unlockedPins[targetId]) {
+    // Only add if not explicitly passed by the caller
+    if (!config.headers['X-Admin-Pin']) {
+      config.headers['X-Admin-Pin'] = state.unlockedPins[targetId];
+    }
   }
   return config;
 });
