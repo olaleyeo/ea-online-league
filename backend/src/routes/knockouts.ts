@@ -40,7 +40,7 @@ router.patch('/knockout/:id', requireAdminPin, async (req: Request, res: Respons
     const { aggregateHome, aggregateAway } = req.body;
     let winnerId = req.body.winnerId;
 
-    if (aggregateHome !== undefined && aggregateAway !== undefined && !winnerId) {
+    if (aggregateHome !== undefined && aggregateAway !== undefined && aggregateHome !== null && aggregateAway !== null && !winnerId) {
       const tie = await prisma.knockoutTie.findUnique({ where: { id: req.params.id as string } });
       if (tie) {
         if (aggregateHome > aggregateAway) winnerId = tie.homePlayerId;

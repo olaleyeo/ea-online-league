@@ -45,10 +45,13 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
   };
 
   const handleUpdateScore = async (id: string, homeScoreStr: string | number | null, awayScoreStr: string | number | null) => {
-    const hs = parseInt(String(homeScoreStr));
-    const as = parseInt(String(awayScoreStr));
+    let hs: number | null = parseInt(String(homeScoreStr));
+    let as: number | null = parseInt(String(awayScoreStr));
     
-    if (isNaN(hs) || isNaN(as)) return;
+    if (isNaN(hs)) hs = null;
+    if (isNaN(as)) as = null;
+    
+    if (hs === null && as === null) return;
     
     try {
       await updateKnockoutTie(id, hs, as);

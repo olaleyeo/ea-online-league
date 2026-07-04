@@ -54,7 +54,7 @@ export const getFixtures = async (id: string) => {
   return data;
 };
 
-export const updateKnockoutTie = async (id: string, aggregateHome: number, aggregateAway: number) => {
+export const updateKnockoutTie = async (id: string, aggregateHome: number | null, aggregateAway: number | null) => {
   const { data } = await api.patch(`/knockout/${id}`, { aggregateHome, aggregateAway });
   return data;
 };
