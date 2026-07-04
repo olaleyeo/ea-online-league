@@ -56,11 +56,12 @@ router.post('/:id/players', requireAdminPin, async (req: Request, res: Response)
   try {
     const id = req.params.id as string;
     const playersData = req.body.players; // Array of { name, rating, pot }
-    const players = await prisma.$transaction(
-      playersData.map((p: any) => prisma.player.create({
-        data: { ...p, tournamentId: id }
-      }))
-    );
+    
+    await prisma.player.createMany({
+      data: playersData.map((p: any) => ({ ...p, tournamentId: id }))
+    });
+    
+    const players = await prisma.player.findMany({ where: { tournamentId: id } });
     res.json(players);
   } catch (error) {
     res.status(500).json({ error: 'Failed to add players' });
