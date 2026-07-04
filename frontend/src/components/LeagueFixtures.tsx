@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { getFixtures, generateLeagueFixtures, api } from '../api';
-import { Zap } from 'lucide-react';
+import { Zap, Lock, Unlock } from 'lucide-react';
+import { useTournamentStore } from '../store/useTournamentStore';
 
 export default function LeagueFixtures({ tournamentId }: { tournamentId: string }) {
+  const { currentTournament, unlockedPins, unlockTournament } = useTournamentStore();
   const [fixtures, setFixtures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pinInput, setPinInput] = useState('');
+  
+  const isLocked = currentTournament?.isLocked && !unlockedPins[tournamentId];
 
   const fetchFixtures = async () => {
     setLoading(true);
@@ -68,7 +73,10 @@ export default function LeagueFixtures({ tournamentId }: { tournamentId: string 
         awayScore: as
       });
       fetchFixtures();
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        alert('Unauthorized: You must unlock Admin Access to edit scores.');
+      }
       console.error('Failed to update score manually', err);
     }
   };
@@ -79,10 +87,11 @@ export default function LeagueFixtures({ tournamentId }: { tournamentId: string 
     return (
       <div className="text-center py-24 bg-slate-900 border border-slate-800 rounded-xl">
         <h2 className="text-2xl font-bold mb-4">No Fixtures Generated</h2>
-        <p className="text-slate-400 mb-8 max-w-md mx-auto">Click below to auto-generate the 8 league phase matches for each player based on pot seedings.</p>
+        <p className="text-slate-400 mb-8 max-w-md mx-auto">Click below to auto-generate the league phase matches.</p>
         <button 
           onClick={handleGenerate}
-          className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-lg shadow-indigo-600/20"
+          disabled={isLocked}
+          className={`px-8 py-3 rounded-lg text-white font-bold transition-all shadow-lg ${isLocked ? 'bg-slate-700 cursor-not-allowed opacity-50' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20'}`}
         >
           Generate League Fixtures
         </button>
@@ -100,10 +109,36 @@ export default function LeagueFixtures({ tournamentId }: { tournamentId: string 
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {currentTournament?.isLocked && (
+          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2 rounded-lg">
+            {isLocked ? (
+              <>
+                <Lock size={18} className="text-amber-500" />
+                <input 
+                  type="password" 
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value)}
+                  placeholder="Admin PIN" 
+                  className="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm w-24 focus:outline-none"
+                />
+                <button 
+                  onClick={() => unlockTournament(tournamentId, pinInput)}
+                  className="bg-amber-600 hover:bg-amber-500 text-white text-sm px-3 py-1 rounded"
+                >Unlock</button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 text-emerald-500 px-2">
+                <Unlock size={18} /> <span className="text-sm font-medium">Admin Access Unlocked</span>
+              </div>
+            )}
+          </div>
+        )}
+        <div className="flex-1"></div>
         <button 
           onClick={handleSimulateAll}
-          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-lg flex items-center gap-2 shadow-lg shadow-purple-500/20"
+          disabled={isLocked}
+          className={`px-4 py-2 text-white font-bold rounded-lg flex items-center gap-2 shadow-lg ${isLocked ? 'bg-slate-700 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-500/20'}`}
         >
           <Zap size={18} /> Simulate All Pending
         </button>
@@ -122,18 +157,20 @@ export default function LeagueFixtures({ tournamentId }: { tournamentId: string 
                   <input 
                     type="number"
                     min="0"
+                    disabled={isLocked}
                     defaultValue={f.homeScore ?? ''}
                     onBlur={(e) => updateScore(f.id, e.target.value, f.awayScore)}
-                    className="w-10 bg-transparent text-center font-mono font-bold text-lg focus:outline-none focus:text-indigo-400 placeholder:text-slate-700"
+                    className="w-10 bg-transparent text-center font-mono font-bold text-lg focus:outline-none focus:text-indigo-400 placeholder:text-slate-700 disabled:opacity-50"
                     placeholder="-"
                   />
                   <span className="text-slate-600 font-bold">-</span>
                   <input 
                     type="number"
                     min="0"
+                    disabled={isLocked}
                     defaultValue={f.awayScore ?? ''}
                     onBlur={(e) => updateScore(f.id, f.homeScore, e.target.value)}
-                    className="w-10 bg-transparent text-center font-mono font-bold text-lg focus:outline-none focus:text-indigo-400 placeholder:text-slate-700"
+                    className="w-10 bg-transparent text-center font-mono font-bold text-lg focus:outline-none focus:text-indigo-400 placeholder:text-slate-700 disabled:opacity-50"
                     placeholder="-"
                   />
                 </div>

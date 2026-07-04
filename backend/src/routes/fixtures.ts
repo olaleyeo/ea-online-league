@@ -2,11 +2,12 @@ import express, { Request, Response } from 'express';
 import { prisma } from '../prisma';
 import { generateLeagueFixtures } from '../services/fixtureGenerator';
 import { recalculateStandings } from '../services/standingService';
+import { requireAdminPin } from '../middleware/auth';
 
 const router = express.Router();
 
 // Generate league fixtures
-router.post('/tournaments/:id/fixtures/league-generate', async (req: Request, res: Response) => {
+router.post('/tournaments/:id/fixtures/league-generate', requireAdminPin, async (req: Request, res: Response) => {
   try {
     const fixtures = await generateLeagueFixtures(req.params.id as string);
     res.json({ message: 'Fixtures generated successfully', fixtures });
@@ -30,7 +31,7 @@ router.get('/tournaments/:id/fixtures', async (req: Request, res: Response) => {
 });
 
 // Update fixture score
-router.patch('/fixtures/:id', async (req: Request, res: Response) => {
+router.patch('/fixtures/:id', requireAdminPin, async (req: Request, res: Response) => {
   try {
     const { homeScore, awayScore } = req.body;
     const fixture = await prisma.fixture.update({

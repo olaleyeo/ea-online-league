@@ -17,6 +17,7 @@ model Tournament {
   id        String       @id @default(uuid())
   name      String
   ownerId   String
+  adminPin  String?
   status    String       @default("DRAFT") // DRAFT, LEAGUE, KNOCKOUT, FINISHED
   owner     User         @relation(fields: [ownerId], references: [id])
   players   Player[]

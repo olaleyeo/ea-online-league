@@ -1,7 +1,19 @@
 import axios from 'axios';
+import { useTournamentStore } from './store/useTournamentStore';
 
 const api = axios.create({
   baseURL: 'https://ea-online-league.onrender.com/api',
+});
+
+api.interceptors.request.use((config) => {
+  // Use getState() to access zustand state outside of React
+  const state = useTournamentStore.getState();
+  const currentTournamentId = state.currentTournament?.id;
+  
+  if (currentTournamentId && state.unlockedPins[currentTournamentId]) {
+    config.headers['X-Admin-Pin'] = state.unlockedPins[currentTournamentId];
+  }
+  return config;
 });
 
 // Export the base api instance so other components can use it directly if needed
@@ -12,8 +24,8 @@ export const getTournaments = async () => {
   return data;
 };
 
-export const createTournament = async (name: string, ownerId: string) => {
-  const { data } = await api.post('/tournaments', { name, ownerId });
+export const createTournament = async (name: string, ownerId: string, adminPin?: string) => {
+  const { data } = await api.post('/tournaments', { name, ownerId, adminPin });
   return data;
 };
 

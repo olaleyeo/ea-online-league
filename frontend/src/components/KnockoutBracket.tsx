@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { getTournament, updateKnockoutTie, progressKnockout, api } from '../api';
 import WinnerBanner from './WinnerBanner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Lock, Unlock } from 'lucide-react';
+import { useTournamentStore } from '../store/useTournamentStore';
 
 export default function KnockoutBracket({ tournamentId }: { tournamentId: string }) {
+  const { currentTournament, unlockedPins, unlockTournament } = useTournamentStore();
   const [ties, setTies] = useState<any[]>([]);
   const [tournament, setTournament] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [progressing, setProgressing] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+
+  const isLocked = currentTournament?.isLocked && !unlockedPins[tournamentId];
 
   const fetchTies = async () => {
     try {
@@ -48,7 +53,10 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
     try {
       await updateKnockoutTie(id, hs, as);
       await fetchTies();
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        alert('Unauthorized: You must unlock Admin Access to edit scores.');
+      }
       console.error('Failed to update tie score', err);
     }
   };
@@ -74,7 +82,8 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
         <p className="text-slate-400 mb-8 max-w-md mx-auto">Ensure the league phase is finished before generating the knockout bracket.</p>
         <button 
           onClick={handleGenerate}
-          className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-lg shadow-indigo-600/20"
+          disabled={isLocked}
+          className={`px-8 py-3 rounded-lg text-white font-bold transition-all shadow-lg ${isLocked ? 'bg-slate-700 cursor-not-allowed opacity-50' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20'}`}
         >
           Generate Knockout Phase
         </button>
@@ -101,6 +110,31 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
 
   return (
     <div className="space-y-8">
+      {currentTournament?.isLocked && (
+        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2 rounded-lg w-fit">
+          {isLocked ? (
+            <>
+              <Lock size={18} className="text-amber-500" />
+              <input 
+                type="password" 
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                placeholder="Admin PIN" 
+                className="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm w-24 focus:outline-none"
+              />
+              <button 
+                onClick={() => unlockTournament(tournamentId, pinInput)}
+                className="bg-amber-600 hover:bg-amber-500 text-white text-sm px-3 py-1 rounded"
+              >Unlock</button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 text-emerald-500 px-2">
+              <Unlock size={18} /> <span className="text-sm font-medium">Admin Access Unlocked</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {champion && <WinnerBanner winnerName={champion.name} />}
 
       <div className="flex gap-4 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -120,9 +154,9 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
                       min="0"
                       defaultValue={tie.aggregateHome ?? ''}
                       onBlur={(e) => handleUpdateScore(tie.id, e.target.value, tie.aggregateAway)}
-                      className="w-12 bg-slate-900 text-center font-mono font-bold rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-slate-700"
+                      className="w-12 bg-slate-900 text-center font-mono font-bold rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-slate-700 disabled:opacity-50"
                       placeholder="-"
-                      disabled={tie.homePlayerId === null || tie.awayPlayerId === null || tournament?.status === 'FINISHED'}
+                      disabled={isLocked || tie.homePlayerId === null || tie.awayPlayerId === null || tournament?.status === 'FINISHED'}
                     />
                   </div>
                   {/* Away Player */}
@@ -133,9 +167,9 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
                       min="0"
                       defaultValue={tie.aggregateAway ?? ''}
                       onBlur={(e) => handleUpdateScore(tie.id, tie.aggregateHome, e.target.value)}
-                      className="w-12 bg-slate-900 text-center font-mono font-bold rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-slate-700"
+                      className="w-12 bg-slate-900 text-center font-mono font-bold rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-slate-700 disabled:opacity-50"
                       placeholder="-"
-                      disabled={tie.homePlayerId === null || tie.awayPlayerId === null || tournament?.status === 'FINISHED'}
+                      disabled={isLocked || tie.homePlayerId === null || tie.awayPlayerId === null || tournament?.status === 'FINISHED'}
                     />
                   </div>
                 </div>
@@ -149,8 +183,10 @@ export default function KnockoutBracket({ tournamentId }: { tournamentId: string
         <div className="flex justify-center mt-8">
           <button
             onClick={handleProgress}
-            disabled={!isStageComplete || progressing}
-            className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg"
+            disabled={isLocked || !isStageComplete || progressing}
+            className={`px-8 py-3 font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg ${
+              isLocked || !isStageComplete || progressing ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+            }`}
           >
             {progressing && <Loader2 className="animate-spin" size={18} />}
             {isStageComplete ? 'Progress to Next Round' : 'Complete All Ties to Progress'}

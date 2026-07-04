@@ -1,14 +1,20 @@
 import express, { Request, Response } from 'express';
 import { prisma } from '../prisma';
+import { requireAdminPin } from '../middleware/auth';
 
 const router = express.Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
     const tournaments = await prisma.tournament.findMany({
-      orderBy: { id: 'desc' }
+      orderBy: { id: 'desc' },
+      select: { id: true, name: true, ownerId: true, status: true, adminPin: true }
     });
-    res.json(tournaments);
+    const sanitized = tournaments.map(t => {
+      const { adminPin, ...rest } = t;
+      return { ...rest, isLocked: !!adminPin };
+    });
+    res.json(sanitized);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch tournaments' });
   }
@@ -16,15 +22,16 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, ownerId } = req.body;
+    const { name, ownerId, adminPin } = req.body;
     let user = await prisma.user.findUnique({ where: { id: ownerId } });
     if (!user) {
        user = await prisma.user.create({ data: { id: ownerId, name: 'Default Admin', email: `${ownerId}@example.com` }});
     }
     const tournament = await prisma.tournament.create({
-      data: { name, ownerId: user.id }
+      data: { name, ownerId: user.id, adminPin: adminPin || null }
     });
-    res.json(tournament);
+    const { adminPin: _, ...safeTournament } = tournament;
+    res.json({ ...safeTournament, isLocked: !!tournament.adminPin });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create tournament' });
   }
@@ -36,14 +43,16 @@ router.get('/:id', async (req: Request, res: Response) => {
       where: { id: req.params.id as string },
       include: { players: true, fixtures: true }
     });
-    res.json(tournament);
+    if (!tournament) return res.status(404).json({ error: 'Not found' });
+    const { adminPin, ...safeTournament } = tournament;
+    res.json({ ...safeTournament, isLocked: !!adminPin });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch tournament' });
   }
 });
 
 // Players
-router.post('/:id/players', async (req: Request, res: Response) => {
+router.post('/:id/players', requireAdminPin, async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     const playersData = req.body.players; // Array of { name, rating, pot }

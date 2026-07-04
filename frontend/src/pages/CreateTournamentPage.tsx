@@ -9,6 +9,7 @@ export default function CreateTournamentPage() {
   const setTournament = useTournamentStore(state => state.setTournament);
   
   const [name, setName] = useState('');
+  const [adminPin, setAdminPin] = useState('');
   const [numPlayers, setNumPlayers] = useState(24);
   const [playerNamesRaw, setPlayerNamesRaw] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,10 @@ export default function CreateTournamentPage() {
     setLoading(true);
     
     try {
-      const tournament = await createTournament(name, 'local-user-id');
+      const tournament = await createTournament(name, 'local-user-id', adminPin);
+      if (adminPin) {
+        useTournamentStore.getState().unlockTournament(tournament.id, adminPin);
+      }
       
       const customNames = playerNamesRaw.split('\n').map(s => s.trim()).filter(Boolean);
       
@@ -65,7 +69,18 @@ export default function CreateTournamentPage() {
             placeholder="e.g. EA Summer Cup 2026"
           />
         </div>
-        
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">Admin PIN (Optional)</label>
+          <input
+            type="text"
+            value={adminPin}
+            onChange={(e) => setAdminPin(e.target.value)}
+            placeholder="E.g., 1234 (leave blank for no restriction)"
+            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+          />
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">Number of Players</label>
           <div className="flex items-center gap-4">

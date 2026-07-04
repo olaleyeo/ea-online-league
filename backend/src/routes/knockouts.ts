@@ -1,10 +1,11 @@
 import express, { Request, Response } from 'express';
 import { prisma } from '../prisma';
 import { generatePlayoffs, progressKnockoutStage } from '../services/bracketGenerator';
+import { requireAdminPin } from '../middleware/auth';
 
 const router = express.Router();
 
-router.post('/tournaments/:id/knockout/generate', async (req: Request, res: Response) => {
+router.post('/tournaments/:id/knockout/generate', requireAdminPin, async (req: Request, res: Response) => {
   try {
     const ties = await generatePlayoffs(req.params.id as string);
     res.json({ message: 'Playoffs generated', ties });
@@ -13,7 +14,7 @@ router.post('/tournaments/:id/knockout/generate', async (req: Request, res: Resp
   }
 });
 
-router.post('/tournaments/:id/knockout/progress', async (req: Request, res: Response) => {
+router.post('/tournaments/:id/knockout/progress', requireAdminPin, async (req: Request, res: Response) => {
   try {
     const result = await progressKnockoutStage(req.params.id as string);
     res.json(result);
@@ -34,7 +35,7 @@ router.get('/tournaments/:id/knockout', async (req: Request, res: Response) => {
   }
 });
 
-router.patch('/knockout/:id', async (req: Request, res: Response) => {
+router.patch('/knockout/:id', requireAdminPin, async (req: Request, res: Response) => {
   try {
     const { aggregateHome, aggregateAway } = req.body;
     let winnerId = req.body.winnerId;
